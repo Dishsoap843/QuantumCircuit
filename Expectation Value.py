@@ -1,4 +1,5 @@
 import numpy as np
+from scipy.linalg import expm
 
 
 Identity = np.array([
@@ -48,7 +49,7 @@ def joinStates (initStates):
 
 #right now this only does 1 dimensional input data, can add multi dimensional input in future
 def encodingGate(inputData, encodingMatrix): 
-    return np.exp((-1j * inputData) * encodingMatrix) 
+    return expm((-1j * inputData) * encodingMatrix) 
 
 #puts together the trainable circuit and encoding block into a single matrix.
 def fullGate(encodingGate, unitary, layers):
@@ -59,9 +60,14 @@ def repeatedKron(matrix, inputData):
     index = 0
     finalMatrix = 1
     while index < inputData.size:
-        finalMatrix = np.kron(finalMatrix, encodingGate(matrix, inputData[index]))
+        finalMatrix = np.kron(finalMatrix, encodingGate(inputData[index], matrix))
         index += 1
-    return finalMatrix / inputData.size
+    return finalMatrix 
+
+
+
+
+
 
 
 
@@ -70,7 +76,7 @@ qubitCount = 2
 baseState = np.array([1,0])
 Gate = CNOT
 Observable = np.identity(2 ** qubitCount)
-inputData = np.full(shape=(qubitCount,1), fill_value=0) #make whatever input data vector you want, right now just [0,0,..,0]
+inputData = np.full(shape=qubitCount, fill_value=0) #make whatever input data vector you want, right now just [0,0,..,0]
 encoder = Pauli_Z
 layers = 1
 #Change above lines to adjust everything
@@ -86,5 +92,10 @@ finalGate = fullGate(repeatedKron(encoder, inputData), Gate, layers)
 
 
 print(expectationValue(initState, finalGate, Observable))
+
+
+
+
+
 
 
